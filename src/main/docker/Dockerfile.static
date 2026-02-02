@@ -1,0 +1,24 @@
+FROM quay.io/quarkus/ubi9-quarkus-graalvmce-builder-image:jdk-21
+USER root
+
+ARG MAVEN_VERSION
+
+WORKDIR /project
+
+RUN microdnf install make gcc -y && \
+    mkdir /musl && \
+    curl -L -o musl.tar.gz https://more.musl.cc/11.2.1/x86_64-linux-musl/x86_64-linux-musl-native.tgz && \
+    tar -xvzf musl.tar.gz -C /musl --strip-components 1 && \
+    curl -L -o zlib.tar.gz https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz && \
+    mkdir zlib && tar -xvzf zlib.tar.gz -C zlib --strip-components 1 && \
+    cd zlib && ./configure --static --prefix=/musl && \
+    make && make install && \
+    cd .. && rm -rf zlib && rm -f zlib.tar.gz && rm -f musl.tar.gz && \
+    curl -L -o mvn.tar.gz https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+    mkdir mvn && tar -xvzf mvn.tar.gz -C mvn --strip-components 1
+
+COPY --chown=quarkus:quarkus pom.xml .
+COPY --chown=quarkus:quarkus src ./src
+
+ENV PATH="/musl/bin:/project/mvn/bin:${PATH}"
+RUN mvn package -Dnative -DskipTests -Dquarkus.native.additional-build-args="--static","--libc=musl"
