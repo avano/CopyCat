@@ -55,5 +55,5 @@ jobs:
       - *checkout
       - *jdk
       - *mvn
-      - name: Run tests
+      - name: Build
         run: mvn --no-transfer-progress clean package -DskipTests -Dnative
