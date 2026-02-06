@@ -1,0 +1,59 @@
+name: Build & Test
+
+on:
+  pull_request_target:
+    paths:
+      - "**/pom.xml"
+      - "**/*.java"
+      - "**/*.properties"
+
+env:
+  MAVEN_VERSION: 3.9.12
+  JAVA_VERSION: 21
+  JAVA_DISTRIBUTION: graalvm
+
+jobs:
+  build:
+    name: JVM - Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - &checkout
+        uses: actions/checkout@v6
+      - &jdk
+        name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - &mvn
+        name: Setup maven &mvn
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: ${{ env.MAVEN_VERSION }}
+      - name: Compile
+        run: mvn --no-transfer-progress clean compile
+
+  test:
+    name: JVM - Test
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - *checkout
+      - *jdk
+      - *mvn
+      - name: Run tests
+        run: mvn --no-transfer-progress clean test
+
+  native:
+    name: Native - Build
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - *checkout
+      - *jdk
+      - *mvn
+      - name: Run tests
+        run: mvn --no-transfer-progress clean package -DskipTests -Dnative
