@@ -60,6 +60,7 @@ public class Database {
             statement.executeUpdate("backup to " + backup);
             // Atomically replace the DB file with its backup
             Files.move(backup, Paths.get(config.databaseFile()), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            LOG.tracef("Persisted database state to %s", backup);
         } catch (IOException | SQLException e) {
             LOG.warn("Unable to persist the DB state to filesystem", e);
         }
