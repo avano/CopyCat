@@ -13,4 +13,6 @@ public interface Config {
     String databaseFile();
 
     int resultCount();
+
+    String purgeInterval();
 }

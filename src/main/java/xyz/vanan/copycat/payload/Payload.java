@@ -14,6 +14,7 @@ import jakarta.persistence.NamedQuery;
  */
 @Entity
 @NamedQuery(name = "list", query = "SELECT p FROM Payload p ORDER BY p.id DESC LIMIT ?1")
+@NamedQuery(name = "purge", query = "DELETE FROM Payload p WHERE p.createdAt < ?1")
 public class Payload {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,6 +30,11 @@ public class Payload {
         this.mediaType = Utils.getPayloadType(data);
         this.data = data;
         this.createdAt = Instant.now();
+    }
+
+    public Payload(byte[] data, Instant timestamp) {
+        this(data);
+        this.createdAt = timestamp;
     }
 
     public Payload(long id, byte[] data) {
